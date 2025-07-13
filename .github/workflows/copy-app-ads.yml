@@ -1,35 +1,37 @@
-name: Deploy app-ads.txt to Pages Root
+name: Copy app-ads.txt to GitHub Pages Root
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
     paths:
       - '**/app-ads.txt'
+    branches:
+      - main
 
 jobs:
-  deploy:
+  copy-file:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout this repo
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Copy app-ads.txt if exists in any path
+      - name: Copy to root if not already
         run: |
-          FILE=$(find . -name "app-ads.txt" | head -n 1)
-          if [ -f "$FILE" ]; then
-            cp "$FILE" ./app-ads.txt
-            echo "✅ Found and copied $FILE to root"
+          if [ -f "./app-ads.txt" ]; then
+            echo "✅ app-ads.txt already in root"
           else
-            echo "❌ app-ads.txt not found!"
-            exit 1
+            FOUND=$(find . -name "app-ads.txt" | head -n 1)
+            if [ -z "$FOUND" ]; then
+              echo "❌ app-ads.txt not found anywhere!"
+              exit 1
+            fi
+            cp "$FOUND" ./app-ads.txt
+            echo "✅ Copied $FOUND to root"
           fi
 
-      - name: Commit and Push
+      - name: Commit and Push root copy
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
           git add app-ads.txt
-          git commit -m "자동복사: app-ads.txt 루트에 배치" || echo "No changes to commit"
+          git commit -m "자동 복사된 app-ads.txt" || echo "No changes to commit"
           git push
