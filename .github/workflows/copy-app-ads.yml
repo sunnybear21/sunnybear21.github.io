@@ -1,0 +1,35 @@
+name: Deploy app-ads.txt to Pages Root
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/app-ads.txt'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v3
+
+      - name: Copy app-ads.txt if exists in any path
+        run: |
+          FILE=$(find . -name "app-ads.txt" | head -n 1)
+          if [ -f "$FILE" ]; then
+            cp "$FILE" ./app-ads.txt
+            echo "✅ Found and copied $FILE to root"
+          else
+            echo "❌ app-ads.txt not found!"
+            exit 1
+          fi
+
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add app-ads.txt
+          git commit -m "자동복사: app-ads.txt 루트에 배치" || echo "No changes to commit"
+          git push
